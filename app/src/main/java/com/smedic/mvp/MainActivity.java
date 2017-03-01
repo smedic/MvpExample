@@ -11,33 +11,52 @@ import android.widget.TextView;
 import com.smedic.mvp.model.Employee;
 import com.smedic.mvp.model.EmployeesResponse;
 
+import butterknife.BindView;
+import butterknife.ButterKnife;
+import butterknife.OnClick;
 import retrofit2.Response;
 
-public class MainActivity extends AppCompatActivity implements MainActivityView, View.OnClickListener {
+public class MainActivity extends AppCompatActivity implements MainActivityView {
 
     private static final String TAG = "SMEDIC MainActivity";
 
     private static final String EXTRA_RX = "EXTRA_RX";
 
-    private Button rxCall, retroCall;
-    private TextView rxResponse, retroResponse;
-    private ProgressBar progressBar;
     private NetworkService service;
     private boolean rxCallInWorks = false;
     private Presenter presenter;
+
+    @BindView(R.id.rxCall)
+    Button rxCall;
+    @BindView(R.id.retroCall)
+    Button retroCall;
+
+    @BindView(R.id.rxResponse)
+    TextView rxResponse;
+    @BindView(R.id.retroResponse)
+    TextView retroResponse;
+    @BindView(R.id.progressBar)
+    ProgressBar progressBar;
+
+    @OnClick({R.id.rxCall, R.id.retroCall})
+    void OnClick(View view) {
+        switch (view.getId()) {
+            case R.id.rxCall:
+                presenter.loadRetroData();
+                break;
+            case R.id.retroCall:
+                rxCallInWorks = true;
+                presenter.loadRxData();
+                break;
+        }
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        ButterKnife.bind(this);
 
-        rxCall = (Button) findViewById(R.id.rxCall);
-        retroCall = (Button) findViewById(R.id.retroCall);
-        rxResponse = (TextView) findViewById(R.id.rxResponse);
-        retroResponse = (TextView) findViewById(R.id.retroResponse);
-        progressBar = (ProgressBar) findViewById(R.id.progressBar);
-        rxCall.setOnClickListener(this);
-        retroCall.setOnClickListener(this);
         service = ((RxApplication) getApplication()).getNetworkService();
         presenter = new Presenter(this, service);
         if (savedInstanceState != null) {
@@ -86,7 +105,6 @@ public class MainActivity extends AppCompatActivity implements MainActivityView,
 
     @Override
     public void showRetroResults(Response<EmployeesResponse> response) {
-        Log.d(TAG, "showRetroResults: ");
         StringBuilder builder = new StringBuilder();
         for (Employee employee : response.body().getEmployees()) {
             builder.append(employee.toString());
@@ -109,7 +127,6 @@ public class MainActivity extends AppCompatActivity implements MainActivityView,
 
     @Override
     public void showRxResults(EmployeesResponse response) {
-        Log.d(TAG, "showRxResults: ");
         StringBuilder builder = new StringBuilder();
         for (Employee employee : response.getEmployees()) {
             builder.append(employee.toString());
@@ -130,18 +147,5 @@ public class MainActivity extends AppCompatActivity implements MainActivityView,
         rxCall.setEnabled(true);
         retroCall.setEnabled(true);
         progressBar.setVisibility(View.GONE);
-    }
-
-    @Override
-    public void onClick(View view) {
-        switch (view.getId()) {
-            case R.id.retroCall:
-                presenter.loadRetroData();
-                break;
-            case R.id.rxCall:
-                rxCallInWorks = true;
-                presenter.loadRxData();
-                break;
-        }
     }
 }
