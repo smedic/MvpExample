@@ -2,6 +2,7 @@ package com.smedic.mvp;
 
 import android.util.LruCache;
 
+import com.smedic.mvp.model.DataReceiver;
 import com.smedic.mvp.model.EmployeesResponse;
 
 import java.io.IOException;
@@ -11,11 +12,14 @@ import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
 import retrofit2.Call;
+import retrofit2.Callback;
 import retrofit2.Retrofit;
 import retrofit2.adapter.rxjava.RxJavaCallAdapterFactory;
 import retrofit2.converter.gson.GsonConverterFactory;
 import retrofit2.http.GET;
 import rx.Observable;
+import rx.Observer;
+import rx.Subscription;
 import rx.android.schedulers.AndroidSchedulers;
 import rx.schedulers.Schedulers;
 
@@ -31,6 +35,9 @@ public class NetworkService implements NetworkServiceRepository {
     private NetworkAPI networkAPI;
     private OkHttpClient okHttpClient;
     private LruCache<Class<?>, Observable<?>> apiObservables;
+    private Subscription subscription;
+
+    private DataReceiver dataReceiver;
 
     public NetworkService() {
         this(baseUrl);
@@ -47,6 +54,14 @@ public class NetworkService implements NetworkServiceRepository {
                 .build();
 
         networkAPI = retrofit.create(NetworkAPI.class);
+    }
+
+    /**
+     * Receiver for sending data to presenter
+     * @param receiver
+     */
+    public void setDataReceiver(DataReceiver receiver) {
+        dataReceiver = receiver;
     }
 
     /**
@@ -90,7 +105,6 @@ public class NetworkService implements NetworkServiceRepository {
      * @param useCache
      * @return Observable ready to be subscribed to
      */
-    @Override
     public Observable<?> getPreparedObservable(Observable<?> unPreparedObservable, Class<?> clazz, boolean cacheObservable, boolean useCache) {
 
         Observable<?> preparedObservable = null;
@@ -123,8 +137,48 @@ public class NetworkService implements NetworkServiceRepository {
     }
 
     @Override
-    public NetworkAPI getAPI() {
-        return networkAPI;
+    public void loadRetroData() {
+        Call<EmployeesResponse> call = networkAPI.getPersons();
+        call.enqueue(new Callback<EmployeesResponse>() {
+            @Override
+            public void onResponse(Call<EmployeesResponse> call, retrofit2.Response<EmployeesResponse> response) {
+                dataReceiver.retroDataReceived(response.body());
+            }
+
+            @Override
+            public void onFailure(Call<EmployeesResponse> call, Throwable t) {
+                dataReceiver.retroDataFailed(t);
+            }
+        });
+    }
+
+    @Override
+    public void rxUnsubscribe() {
+        if (subscription != null && !subscription.isUnsubscribed())
+            subscription.unsubscribe();
+    }
+
+    @Override
+    public void loadRxData() {
+        @SuppressWarnings("unchecked")
+        Observable<EmployeesResponse> friendResponseObservable = (Observable<EmployeesResponse>)
+                getPreparedObservable(networkAPI.getPersonsObservable(), EmployeesResponse.class, true, true);
+        subscription = friendResponseObservable.subscribe(new Observer<EmployeesResponse>() {
+            @Override
+            public void onCompleted() {
+
+            }
+
+            @Override
+            public void onError(Throwable t) {
+                dataReceiver.rxDataFailed(t);
+            }
+
+            @Override
+            public void onNext(EmployeesResponse response) {
+                dataReceiver.rxDataReceived(response);
+            }
+        });
     }
 
     /**

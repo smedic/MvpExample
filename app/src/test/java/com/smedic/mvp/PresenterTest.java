@@ -4,6 +4,7 @@ import com.smedic.mvp.model.EmployeesResponse;
 
 import org.junit.Test;
 
+import retrofit2.Call;
 import retrofit2.Response;
 import rx.Observable;
 
@@ -23,7 +24,7 @@ public class PresenterTest {
         MockRepository model = new MockRepository();
 
         Presenter presenter = new Presenter(view, model);
-        //presenter.loadResults();
+        presenter.loadRetroData();
 
         //Assert.assertEquals(isShown, true);
     }
@@ -61,6 +62,8 @@ public class PresenterTest {
         }
     }
 
+
+
     private class MockRepository implements NetworkServiceRepository {
         @Override
         public NetworkService.NetworkAPI getAPI() {
@@ -69,6 +72,18 @@ public class PresenterTest {
 
         @Override
         public Observable<?> getPreparedObservable(Observable<?> unPreparedObservable, Class<?> clazz, boolean cacheObservable, boolean useCache) {
+            return null;
+        }
+    }
+
+    private class MockNetworkApi implements NetworkService.NetworkAPI {
+        @Override
+        public Call<EmployeesResponse> getPersons() {
+            return null;
+        }
+
+        @Override
+        public Observable<EmployeesResponse> getPersonsObservable() {
             return null;
         }
     }

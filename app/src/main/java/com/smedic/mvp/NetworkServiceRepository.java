@@ -1,6 +1,6 @@
 package com.smedic.mvp;
 
-import rx.Observable;
+import com.smedic.mvp.model.DataReceiver;
 
 /**
  * Created by Stevan Medic on 1.3.17..
@@ -8,7 +8,12 @@ import rx.Observable;
 
 public interface NetworkServiceRepository {
 
-    NetworkService.NetworkAPI getAPI();
+    //NetworkService.NetworkAPI getAPI();
 
-    Observable<?> getPreparedObservable(Observable<?> unPreparedObservable, Class<?> clazz, boolean cacheObservable, boolean useCache);
+    //Observable<?> getPreparedObservable(Observable<?> unPreparedObservable, Class<?> clazz, boolean cacheObservable, boolean useCache);
+
+    void loadRetroData();
+    void loadRxData();
+    void rxUnsubscribe();
+    void setDataReceiver(DataReceiver receiver);
 }

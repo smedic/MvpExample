@@ -14,7 +14,6 @@ import com.smedic.mvp.model.EmployeesResponse;
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
-import retrofit2.Response;
 
 public class MainActivity extends AppCompatActivity implements MainActivityView {
 
@@ -41,10 +40,10 @@ public class MainActivity extends AppCompatActivity implements MainActivityView 
     @OnClick({R.id.rxCall, R.id.retroCall})
     void OnClick(View view) {
         switch (view.getId()) {
-            case R.id.rxCall:
+            case R.id.retroCall:
                 presenter.loadRetroData();
                 break;
-            case R.id.retroCall:
+            case R.id.rxCall:
                 rxCallInWorks = true;
                 presenter.loadRxData();
                 break;
@@ -104,9 +103,9 @@ public class MainActivity extends AppCompatActivity implements MainActivityView 
     }
 
     @Override
-    public void showRetroResults(Response<EmployeesResponse> response) {
+    public void showRetroResults(EmployeesResponse response) {
         StringBuilder builder = new StringBuilder();
-        for (Employee employee : response.body().getEmployees()) {
+        for (Employee employee : response.getEmployees()) {
             builder.append(employee.toString());
             builder.append("\n");
         }
